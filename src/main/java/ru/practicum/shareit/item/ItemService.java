@@ -12,7 +12,7 @@ public interface ItemService {
 
     Item getItem(Integer owner);
 
-    List<Item> getItemsForOwner(Integer owner);
+    List<ItemDto> getItemsForOwner(Integer owner);
 
-    List<Item> itemSearch(String text);
+    List<ItemDto> itemSearch(String text);
 }

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.other.Marker;
+import ru.practicum.shareit.marker.Marker;
 
 /**
  * TODO Sprint add-controllers.

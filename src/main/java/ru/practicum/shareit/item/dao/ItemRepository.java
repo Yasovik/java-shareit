@@ -8,6 +8,7 @@ import ru.practicum.shareit.item.dto.ItemDtoMapper;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -61,15 +62,15 @@ public class ItemRepository {
 
     }
 
-    public List<Item> getItemsForOwner(int owner) {
+    public List<ItemDto> getItemsForOwner(int owner) {
         try {
-            return items.get(owner).values().stream().toList();
+            return items.get(owner).values().stream().collect(Collectors.toList());
         } catch (NullPointerException e) {
             throw new NotFoundException("Вещи для пользователя с ID " + id + " не найдены");
         }
     }
 
-    public List<Item> searchItems(String text) {
+    public List<ItemDto> searchItems(String text) {
         try {
             return items.values().stream()
                     .flatMap(userItems -> userItems.values().stream())
@@ -77,7 +78,7 @@ public class ItemRepository {
                     .filter(item -> (item.getName().toLowerCase().contains(text) ||
                             item.getDescription().toLowerCase().contains(text)) &&
                             item.getAvailable())
-                    .toList();
+                    .collect(Collectors.toList());
         } catch (NullPointerException e) {
             return new ArrayList<>();
         }
