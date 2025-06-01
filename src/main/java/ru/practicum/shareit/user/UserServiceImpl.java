@@ -3,12 +3,18 @@ package ru.practicum.shareit.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.dto.NewUserDto;
+import ru.practicum.shareit.user.dto.UpdateUserDto;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static ru.practicum.shareit.user.dto.UserMapper.*;
 
 @Service
 @Slf4j
@@ -21,64 +27,56 @@ public class UserServiceImpl implements UserService {
         this.storage = storage;
     }
 
+
     @Override
-    public UserDto create(User user) {
-        log.info("Проверяем, нет ли такого пользователя");
-        storage.checkUserExist(user.getEmail());
-        log.info("Создаем нового пользователя пользователя");
-        return storage.create(user);
+    public UserDto create(NewUserDto userDto) {
+        validateEmailExist(userDto.getEmail());
+        return mapToUserDto(storage.save(mapToNewUser(userDto)));
     }
 
     @Override
-    public UserDto update(UserDto userDto, Integer id) {
-        if (id == null) {
-            throw new IllegalArgumentException("id не может быть null");
-        }
-        try {
-            storage.checkUserExist(userDto.getEmail());
-            log.info("Проверяем, существует ли пользователь");
-            storage.getUser(id);
-            log.info("Пользователь существует, обновляем его данные");
-            return storage.update(userDto, id);
-        } catch (NullPointerException e) {
-            throw new NotFoundException("Пользователь с ID=" + id + " не найден");
-        }
+    public UserDto update(Long userId, UpdateUserDto userDto) {
+        User user = validateUserExist(userId);
+        validateEmailExist(userDto.getEmail(), user.getId());
+        updateUserFields(user, userDto);
+        storage.save(user);
+        return mapToUserDto(user);
     }
+
 
     @Override
     public UserDto getUser(Integer id) {
-        if (id == null) {
-            throw new IllegalArgumentException("id не может быть null");
-        }
-        try {
-            return storage.getUser(id);
-        } catch (NullPointerException e) {
-            throw new NotFoundException("Пользователь с ID=" + id + " не найден");
-        }
+        return mapToUserDto(validateUserExist(Long.valueOf(id)));
     }
 
     @Override
     public List<UserDto> getAllUsers() {
-        try {
-            return storage.getAllUsers();
-        } catch (NullPointerException e) {
-            return new ArrayList<>();
-        }
-
+        return storage.findAll().stream().map(UserMapper::mapToUserDto).toList();
     }
 
     @Override
     public void delete(Integer id) {
-        if (id == null) {
-            throw new IllegalArgumentException("id не может быть null");
+        validateUserExist(Long.valueOf(id));
+        storage.deleteById(Long.valueOf(id));
+    }
+
+    @Override
+    public User validateUserExist(Long userId) {
+        return storage.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден.", userId)));
+    }
+
+    private void validateEmailExist(String email) {
+        Optional<User> alreadyExistUser = storage.findByEmail(email);
+        if (alreadyExistUser.isPresent()) {
+            throw new DuplicatedDataException(String.format("Email - %s уже используется", email));
         }
-        try {
-            log.info("Проверяем, существует ли пользователь");
-            storage.getUser(id);
-            log.info("Удаляем пользователя");
-            storage.delete(id);
-        } catch (NullPointerException e) {
-            throw new NotFoundException("Пользователь с ID=" + id + " не найден");
+    }
+
+    private void validateEmailExist(String email, Long currentUserId) {
+        Optional<User> alreadyExistUser = storage.findByEmail(email);
+        if (alreadyExistUser.isPresent() && !alreadyExistUser.get().getId().equals(currentUserId)) {
+            throw new DuplicatedDataException(String.format("Email - %s уже используется", email));
         }
     }
 
