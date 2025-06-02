@@ -14,7 +14,13 @@ import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.CommentRepository;
 import ru.practicum.shareit.item.dao.ItemRepository;
-import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.NewCommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.NewItemDto;
+import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
@@ -25,21 +31,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.practicum.shareit.item.dto.ItemMapper.*;
+import static ru.practicum.shareit.item.dto.ItemMapper.mapToItemDto;
+import static ru.practicum.shareit.item.dto.ItemMapper.updateItemFields;
+import static ru.practicum.shareit.item.dto.ItemMapper.mapToNewItem;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
 
-    @Autowired
     ItemRepository itemRepository;
-    @Autowired
     UserService userService;
-    @Autowired
     BookingRepository bookingRepository;
-    @Autowired
     CommentRepository commentRepository;
+
+    @Autowired
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           UserService userService,
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository) {
+        this.itemRepository = itemRepository;
+        this.userService = userService;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
+    }
 
     @Override
     public ItemDto create(Long userId, NewItemDto itemDto) {
@@ -48,7 +64,6 @@ public class ItemServiceImpl implements ItemService {
         item.setOwner(owner);
         return mapToItemDto(itemRepository.save(item));
     }
-
 
     @Override
     public ItemDto update(Long userId, Long itemId, UpdateItemDto itemDto) {
@@ -67,7 +82,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = validateItemExist(itemId);
         userService.validateUserExist(userId);
 
-        ItemDto itemDto = ItemMapper.mapToItemDto(item);
+        ItemDto itemDto = mapToItemDto(item);
 
         loadDetails(itemDto);
 
@@ -111,31 +126,6 @@ public class ItemServiceImpl implements ItemService {
     private Item validateItemExist(Long itemId) {
         return itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Предмет аренды с id %d не найден.", itemId)));
-    }
-
-    private boolean validateItemAndCommentAuthorAndDate(Long userId, Long itemId) {
-        validateItemExist(itemId);
-        List<Booking> bookings = bookingRepository.findAllByItemId(itemId);
-
-        if (bookings.isEmpty()) {
-            throw new ValidationException("Для данной вещи ещё не было бронирований! Вы не можете оставить комментарий!");
-        }
-
-        Booking booking = bookings.stream()
-                .filter(booking1 -> booking1.getBooker().getId().equals(userId))
-                .findFirst()
-                .orElseThrow(() -> new ForbiddenException("Пользователь не имеет права оставлять комментарий, " +
-                        "так как не был арендатором!"));
-
-        if (!(booking.getStatus() == BookingStatus.APPROVED)) {
-            throw new ForbiddenException("Пользователь не имеет подтвержденного бронирования!");
-        }
-
-        if (!booking.getEnd().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Пользователь не имеет завершенного бронирования!");
-        }
-
-        return true;
     }
 
     @Transactional
