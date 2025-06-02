@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,13 +37,12 @@ import static ru.practicum.shareit.item.dto.ItemMapper.mapToNewItem;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
 
-    ItemRepository itemRepository;
-    UserService userService;
-    BookingRepository bookingRepository;
-    CommentRepository commentRepository;
+    private final ItemRepository itemRepository;
+    private final UserService userService;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository,
