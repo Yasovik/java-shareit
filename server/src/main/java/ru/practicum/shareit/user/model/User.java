@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Objects;
-
 @Getter
 @Setter
 @NoArgsConstructor
