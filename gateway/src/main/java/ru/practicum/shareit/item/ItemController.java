@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.NewCommentDto;
@@ -18,17 +19,20 @@ public class ItemController {
     ItemClient itemClient;
 
     @GetMapping
+    @Cacheable("items")
     public ResponseEntity<Object> findAllOwnerItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemClient.findAllOwnerItems(userId);
     }
 
     @GetMapping("/search")
+    @Cacheable("items")
     public ResponseEntity<Object> findItemsByNameOrDescription(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                                @RequestParam(value = "text", required = false) String text) {
         return itemClient.findItemsByNameOrDescription(userId, text);
     }
 
     @GetMapping("/{itemId}")
+    @Cacheable("items")
     public ResponseEntity<Object> getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                               @PathVariable("itemId") Long itemId) {
         return itemClient.getItemById(userId, itemId);

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.NewBookingDto;
@@ -24,6 +25,7 @@ public class BookingController {
     }
 
     @GetMapping
+    @Cacheable("bookings")
     public ResponseEntity<Object> getAllBookingsForBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                           @RequestParam(name = "state", defaultValue = "all")
                                                           String stateParam,
@@ -39,6 +41,7 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
+    @Cacheable("bookings")
     public ResponseEntity<Object> getAllBookingsForOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                          @RequestParam(defaultValue = "ALL") BookingState state) {
         return bookingClient.getAllBookingsForOwner(userId, state);
@@ -46,6 +49,7 @@ public class BookingController {
 
 
     @GetMapping("/{bookingId}")
+    @Cacheable("bookings")
     public ResponseEntity<Object> getBookingById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                  @PathVariable("bookingId") Long bookingId) {
         return bookingClient.getBookingById(userId, bookingId);

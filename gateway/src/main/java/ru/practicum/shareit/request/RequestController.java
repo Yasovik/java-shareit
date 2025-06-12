@@ -6,6 +6,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.NewRequestDto;
@@ -24,11 +25,13 @@ public class RequestController {
     }
 
     @GetMapping
+    @Cacheable("requests")
     public ResponseEntity<Object> getAllRequestsById(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return requestClient.getAllRequestsById(userId);
     }
 
     @GetMapping("/all")
+    @Cacheable("requests")
     public ResponseEntity<Object> getRequests(@RequestHeader("X-Sharer-User-Id") Long userId,
                                               @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
                                               @RequestParam(name = "size", defaultValue = "50") @Positive Integer size) {
@@ -36,6 +39,7 @@ public class RequestController {
     }
 
     @GetMapping("/{requestId}")
+    @Cacheable("requests")
     public ResponseEntity<Object> getRequestById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                  @PathVariable("requestId") Long requestId) {
         return requestClient.getRequestById(userId, requestId);

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.NewUserDto;
@@ -17,11 +18,13 @@ public class UserController {
     UserClient userClient;
 
     @GetMapping
+    @Cacheable("users")
     public ResponseEntity<Object> getUsers() {
         return userClient.getUsers();
     }
 
     @GetMapping("/{userId}")
+    @Cacheable("users")
     public ResponseEntity<Object> getUserById(@PathVariable("userId") Long userId) {
         return userClient.getUserById(userId);
     }
